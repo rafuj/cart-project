@@ -1,17 +1,58 @@
-import React, { useContext, useState } from "react";
-import cartItems from "./data";
-// ATTENTION!!!!!!!!!!
-// I SWITCHED TO PERMANENT DOMAIN
+import React, { useContext, useEffect, useReducer } from "react";
+import reducer from "./reducer";
+
 const url = "https://course-api.com/react-useReducer-cart-project";
+
 const AppContext = React.createContext();
 
+const initialState = {
+  loading: false,
+  cart: [],
+  amount: 0,
+  total: 0,
+};
 const AppProvider = ({ children }) => {
-  const [cart, setCart] = useState(cartItems);
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  const clearCart = () => {
+    dispatch({ type: "CLEAR_CART" });
+  };
+
+  const remove = (id) => {
+    dispatch({ type: "REMOVE", fixedItem: id });
+  };
+
+  const increase = (id) => {
+    dispatch({ type: "INCREASE", fixedItem: id });
+  };
+
+  const decrease = (id) => {
+    dispatch({ type: "DECREASE", fixedItem: id });
+  };
+
+  const fetchData = async () => {
+    dispatch({ type: "LOADING" });
+    const response = await fetch(url);
+    const cartData = await response.json();
+    dispatch({ type: "DISPLAY_ITEMS", cartData: cartData });
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    dispatch({ type: "GET_TOTALS" });
+  }, [state.cart]);
 
   return (
     <AppContext.Provider
       value={{
-        cart,
+        ...state,
+        clearCart,
+        remove,
+        decrease,
+        increase,
       }}
     >
       {children}
